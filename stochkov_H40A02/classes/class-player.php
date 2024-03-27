@@ -60,9 +60,7 @@ class Player {
         $players = array_values($players);
         if (sizeof($players) > 0) {
             foreach ($players as $i => $player) {
-                $ind = strpos($player, "~");
-                $num = substr($player, 0, $ind);
-                if ($num == $id && $i != $edit)
+                if ($player->get_player_number() == $id && $i != $edit)
                     return "Player number must be unique.";
             } // foreach
         } // if
@@ -76,18 +74,6 @@ class Player {
             return 'File is too large.';
         return "";
     }
-
-   static function delete_player(array $players, int $index, string $email) : array {
-        $exploded = explode("~", $players[$index]);
-        $dir = "./images/" . $email . "/";
-        $dir_entries = glob($dir . '*.{jpg,jpeg,png,gif}', GLOB_BRACE);
-        foreach ($dir_entries as $img) {
-            if (pathinfo($img, PATHINFO_FILENAME) == $exploded[0])
-                unlink($img);
-        } // foreach
-        unset($players[$index]);
-        return $players;
-    } // delete_player
 
     static function get_image_path(string $num, string $email) : string {
         $dir = "./images/" . $email . "/";

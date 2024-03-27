@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-require "./class-player.php";
+require "./classes/class-player.php";
 class Leader {
     private string $name;
     private string $email_address;
@@ -22,8 +22,7 @@ class Leader {
         $leaders = array_values($leaders);
         if (sizeof($leaders) > 0) {
             foreach ($leaders as $leader) {
-                $leader_arr = explode("~", $leader);
-                if ($email === $leader_arr[1])
+                if ($email === $leader->get_email_address())
                     return "An account with that email already exists.";
             } // foreach
         } // if
@@ -59,15 +58,24 @@ class Leader {
         $leaders = array_values($leaders);
         if (sizeof($leaders) > 0) {
             foreach ($leaders as $leader) {
-                $leader_arr = explode("~", $leader);
-                if ($email === $leader_arr[1]) {
-                    if (password_verify($pass, $leader_arr[2]))
+                if ($email === $leader->get_email_address()) {
+                    if (password_verify($pass, $leader->get_password()))
                         return "";
                 } // if email exists
             } // foreach
         } // if
         return "Invalid email or password.";
     } // login_error()
+
+    static function get_leader_object(string $email) : ?Leader {
+        $leaders = file("./leader-data.txt");
+        foreach($leaders as $lead) {
+            $obj = unserialize($lead);
+            if ($email === $obj->get_email_address())
+                return $obj;
+        }
+        return null;
+    } // get_leader_object()
 
     static function get_leader_name(string $email, array $leaders) : string {
         $leaders = array_values($leaders);
@@ -82,14 +90,31 @@ class Leader {
         return "";
     } // get_leader_name()
 
-    function create_new_leader() : string {
-        return $this->name . "~" . $this->email_address . "~" . $this->password;
-    } // create_new_leader()
+    function delete_player(int $index) : array {
+        $dir = "./images/" . $this->email_address . "/";
+        $dir_entries = glob($dir . '*.{jpg,jpeg,png,gif}', GLOB_BRACE);
+        foreach ($dir_entries as $img) {
+            if (pathinfo($img, PATHINFO_FILENAME) == $this->player_array[$index]->get_player_number())
+                unlink($img);
+        } // foreach
+        unset($this->player_array[$index]);
+        $this->player_array = array_values($this->player_array);
+        return $this->player_array;
+    } // delete_player
 
     function add_to_players(Player $player) : bool {
         array_push($this->player_array, $player);
+        $this->player_array = array_values(array_diff($this->player_array, array(null, "")));
+        usort($this->player_array,'by_name');
         return true;
     } // add_to_players()
+
+    function by_name($a, $b) : int {
+        $last_name_comp = strcmp(strtolower($a->get_last_name()), strtolower($b->get_last_name()));
+        if ($last_name_comp === 0)
+            return strcmp(strtolower($a->get_first_name()), strtolower($b->get_first_name()));
+        return $last_name_comp;
+    } // by_name
 
     // setters & getters
     function get_name() : string {

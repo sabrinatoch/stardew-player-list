@@ -14,37 +14,38 @@ require "./classes/class-leader.php";
 // variables
 $action = $_GET["action"] ?? "";
 $display_login = $action === "";
+
 $editing = false;
 $index_to_delete = $_GET["delete"] ?? "";
 $index_to_edit = $_GET["update"] ?? "";
+
 $empty = false;
-$player_filename = "";
-$players_file = [];
-$player_info = [];
 $leader_array = [];
+
+$logged_leader = new Leader("", "", "");
 
 // if (!file_exists("./players"))
 //     mkdir("./players");
 if (!file_exists("./images"))
     mkdir("./images");
 
-// populating the players_file array
-if (isset($_SESSION["leader_email"])) {
-
-    $player_filename = "./players/" . $_SESSION["leader_email"] . ".txt";
-    if (file_exists($player_filename) && filesize($player_filename) > 0)
-        $players_file = file($player_filename, FILE_IGNORE_NEW_LINES);
-    else {
+// getting the leader
+if (isset($_SESSION["leader"])) {
+    $logged_leader = unserialize($_SESSION["leader"]);
+    if (count($logged_leader->get_player_array()) == 0) {
         $empty = true;
-        $open_file = fopen($player_filename, "w");
-        if (!file_exists("./images/" . $_SESSION["leader_email"]))
-            mkdir("./images/" . $_SESSION["leader_email"]);
+        if (!file_exists("./images/" . $logged_leader->get_email_address()))
+            mkdir("./images/" . $logged_leader->get_email_address());
     } // else
 }
 
 // populating the leaders_file array
-if (file_exists("./leader-data.txt") && filesize("./leader-data.txt") > 0)
-    $leaders_file = file("./leader-data.txt", FILE_IGNORE_NEW_LINES);
+if (file_exists("./leader-data.txt") && filesize("./leader-data.txt") > 0) {
+    $leader_file = file("./leader-data.txt", FILE_IGNORE_NEW_LINES);
+    foreach ($leader_file as $leader_line) {
+        array_push($leader_array, unserialize($leader_line));
+    }
+} // if
 else
     $open_file = fopen("./leader-data.txt", "w");
 
@@ -57,20 +58,14 @@ $login_err = "";
 
 // POST FOR LOGIN
 if (isset($_POST["login"])) {
-    $login_err = Leader::login_error($login_info["email"], $login_info["password"], $leaders_file);
+    $login_err = Leader::login_error($login_info["email"], $login_info["password"], $leader_array);
     if ($login_err === "") {
         $display_login = false;
-        $_SESSION["leader_name"] = Leader::get_leader_name($login_info["email"], $leaders_file);
-        $_SESSION["leader_email"] = $login_info["email"];
+        $logged_leader = Leader::get_leader_object($login_info["email"]);
+        $_SESSION["leader"] = serialize($logged_leader);
         $_SESSION["time_logged"] = date("D M d, Y G:i");
-        // populating the players_file array
-        $player_filename = "./players/" . $login_info["email"] . ".txt";
-        if (file_exists($player_filename) && filesize($player_filename) > 0)
-            $players_file = file($player_filename, FILE_IGNORE_NEW_LINES);
-        else {
+        if (count($logged_leader->get_player_array()) == 0)
             $empty = true;
-            $open_file = fopen($player_filename, "w");
-        } // else
     } // if logged in
     else {
         $display_login = true;
@@ -113,27 +108,13 @@ $account_err = [
   "confirm" => "",
 ];
 
-function by_name($a, $b) : int {
-    $a_arr = explode("~", $a);
-    $b_arr = explode("~", $b);
-    $last_name_comp = strcmp(strtolower($a_arr[2]), strtolower($b_arr[2]));
-    if ($last_name_comp === 0)
-        return strcmp(strtolower($a_arr[1]), strtolower($b_arr[1]));
-    return $last_name_comp;
-} // by_name
-
-
 // DELETING
 if ($index_to_delete !== "") {
     // popup "Are you sure you want to delete this player?"
-    if (array_key_exists($index_to_delete, $players_file)) {
-        $player_to_del = $players_file[$index_to_delete];
+    if (array_key_exists($index_to_delete, $logged_leader->get_player_array())) {
+        $player_to_del = $logged_leader->get_player_array()[$index_to_delete];
         $player_to_del = explode("~", $player_to_del);
-        $players_file = Player::delete_player($players_file, intval($index_to_delete), $_SESSION["leader_email"]);
-        $players_file = array_values($players_file);
-        $file = fopen($player_filename, "w");
-        fwrite($file, implode("\n", $players_file));
-        fclose($file);
+        $logged_leader->delete_player(intval($index_to_delete));
         header('Location: ./player-league.php?action=view');
     } // if
     else {
@@ -143,14 +124,14 @@ if ($index_to_delete !== "") {
 
 // EDITING
 if ($index_to_edit !== "") {
-    if (array_key_exists($index_to_edit, $players_file)) {
-        $player_to_edit = explode("~", $players_file[$index_to_edit]);
-        $new_player["number"] = $player_to_edit[0];
-        $new_player["first"] = $player_to_edit[1];
-        $new_player["last"] = $player_to_edit[2];
-        $new_player["city"] = $player_to_edit[3];
-        $new_player["country"] = $player_to_edit[4];
-        $new_player["prof"] = $player_to_edit[5] === "yes";
+    if (array_key_exists($index_to_edit, $logged_leader->get_player_array())) {
+        $player_to_edit = $logged_leader->get_player_array()[$index_to_edit];
+        $new_player["number"] = $player_to_edit->get_player_number();
+        $new_player["first"] = $player_to_edit->get_first_name();
+        $new_player["last"] = $player_to_edit->get_last_name();
+        $new_player["city"] = $player_to_edit->get_city();
+        $new_player["country"] = $player_to_edit->get_country()->value;
+        $new_player["prof"] = $player_to_edit->get_is_professional();
         $editing = true;
         $display_login = false;
     } // if
@@ -162,7 +143,7 @@ if ($index_to_edit !== "") {
 // POST FOR CREATE LEADER ACCOUNT
 if (isset($_POST["submit_account"])) {
     $account_err["name"] = Player::name_error($new_leader["name"]);
-    $account_err["email"] = Leader::email_error($new_leader["email"], $leaders_file);
+    $account_err["email"] = Leader::email_error($new_leader["email"], $leader_array);
     $account_err["pass"] = Leader::password_error($new_leader["pass"]);
     $account_err["confirm"] = Leader::confirm_password($new_leader["pass"], $new_leader["confirm"]);
 
@@ -200,7 +181,7 @@ if (isset($_POST["create"]) || isset($_POST["save"])) {
         $err["last"] = Player::name_error($new_player["last"]);
         $err["city"] = Player::city_error($new_player["city"]);
         $err["country"] = Player::country_error($_POST["country"]);
-        $err["number"] = Player::player_number_error($players_file, $_POST["num"], $index_to_edit);
+        $err["number"] = Player::player_number_error($logged_leader->get_player_array(), $_POST["num"], $index_to_edit);
         $err["img"] = Player::img_error($_FILES['img']);
 
         if (empty($err["first"]) && empty($err["last"]) && empty($err["img"]) &&
@@ -215,19 +196,12 @@ if (isset($_POST["create"]) || isset($_POST["save"])) {
                 isset($_POST["prof"]));
 
             if ($index_to_edit !== "")
-                $players_file = Player::delete_player($players_file, intval($index_to_edit), $_SESSION["leader_email"]);
+                $logged_leader->delete_player(intval($index_to_edit));
 
-            $player_str = $player_obj->create_new_player();
-            array_unshift($players_file, $player_str);
-            $players_file = array_values(array_diff($players_file, array("")));
-            usort($players_file, 'by_name');
-
-            $file = fopen($player_filename, "w");
-            fwrite($file, implode("\n", $players_file));
-            fclose($file);
+            $logged_leader->add_to_players($player_obj);
 
             if ($_FILES['img']['size'] > 0) {
-                $dest = "./images/" . $_SESSION["leader_email"] . "/" . $_POST["num"] . substr($_FILES['img']['name'], strpos($_FILES['img']['name'], '.'));
+                $dest = "./images/" . $logged_leader->get_email_address() . "/" . $_POST["num"] . substr($_FILES['img']['name'], strpos($_FILES['img']['name'], '.'));
                 move_uploaded_file($_FILES['img']['tmp_name'], $dest);
             } // if image was uploaded
         } // if no errors
@@ -337,17 +311,16 @@ if ($action === "logout") {
 <a class="create-btn" href="./player-league.php?action=add"><button name="add" id="add" class="btn stardew-btn">New Player</button></a>
 <a class="logout-btn" href="./player-league.php?action=logout"><button name="logout" id="logout" class="btn stardew-btn">Log Out</button></a>
 <div class="players-container">
-    <?php foreach ($players_file as $index => $player) :?>
-        <?php $info = explode("~", $player) ?>
+    <?php foreach ($logged_leader->get_player_array() as $index => $player) :?>
         <div class="player">
             <a class="edit" href="./player-league.php?update=<?= $index ?>"></a>
             <a class="del" href="./player-league.php?delete=<?= $index ?>"></a>
-            <?php $img_path = Player::get_image_path($info[0], $_SESSION["leader_email"]); ?>
+            <?php $img_path = Player::get_image_path($player->get_player_number(), $logged_leader->get_email_address()); ?>
             <img src="<?=$img_path?>" width="210px"/>
-            <p><?=$info[1] . " " . $info[2]?></p>
-            <p><?="Player #" . $info[0]?></p>
-            <p><?=$info[3] . ", " . $info[4]?></p>
-            <p>Professional: <?=$info[5]?></p>
+            <p><?=$player->get_first_name() . " " . $player->get_last_name()?></p>
+            <p><?="Player #" . $player->get_player_number()?></p>
+            <p><?=$player->get_city() . ", " . $player->get_country()->value?></p>
+            <p>Professional: <?=($player->get_is_professional() ? "yes" : "no")?></p>
         </div>
     <?php endforeach; ?>
 </div>
