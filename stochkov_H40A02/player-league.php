@@ -8,7 +8,6 @@ session_start();
 
 // files
 require "./enums/enum-country.php";
-require "./classes/class-player.php";
 require "./classes/class-leader.php";
 
 // variables
@@ -19,13 +18,10 @@ $editing = false;
 $index_to_delete = $_GET["delete"] ?? "";
 $index_to_edit = $_GET["update"] ?? "";
 
-$empty = false;
 $leader_array = [];
 
 $logged_leader = new Leader("", "", "");
 
-// if (!file_exists("./players"))
-//     mkdir("./players");
 if (!file_exists("./images"))
     mkdir("./images");
 
@@ -33,17 +29,22 @@ if (!file_exists("./images"))
 if (isset($_SESSION["leader"])) {
     $logged_leader = unserialize($_SESSION["leader"]);
     if (count($logged_leader->get_player_array()) == 0) {
-        $empty = true;
         if (!file_exists("./images/" . $logged_leader->get_email_address()))
             mkdir("./images/" . $logged_leader->get_email_address());
     } // else
 }
 
+function reset_session($logged) : Leader {
+    $_SESSION["leader"] = serialize($logged);
+    return unserialize($_SESSION["leader"]);
+} // reset_session()
+
 // populating the leaders_file array
 if (file_exists("./leader-data.txt") && filesize("./leader-data.txt") > 0) {
     $leader_file = file("./leader-data.txt", FILE_IGNORE_NEW_LINES);
     foreach ($leader_file as $leader_line) {
-        array_push($leader_array, unserialize($leader_line));
+        $line = unserialize($leader_line);
+        array_push($leader_array, $line);
     }
 } // if
 else
@@ -64,8 +65,6 @@ if (isset($_POST["login"])) {
         $logged_leader = Leader::get_leader_object($login_info["email"]);
         $_SESSION["leader"] = serialize($logged_leader);
         $_SESSION["time_logged"] = date("D M d, Y G:i");
-        if (count($logged_leader->get_player_array()) == 0)
-            $empty = true;
     } // if logged in
     else {
         $display_login = true;
@@ -112,9 +111,9 @@ $account_err = [
 if ($index_to_delete !== "") {
     // popup "Are you sure you want to delete this player?"
     if (array_key_exists($index_to_delete, $logged_leader->get_player_array())) {
-        $player_to_del = $logged_leader->get_player_array()[$index_to_delete];
-        $player_to_del = explode("~", $player_to_del);
         $logged_leader->delete_player(intval($index_to_delete));
+        $logged_leader = reset_session($logged_leader);
+        Leader::save_leaders($leader_array, $logged_leader);
         header('Location: ./player-league.php?action=view');
     } // if
     else {
@@ -156,20 +155,15 @@ if (isset($_POST["submit_account"])) {
         );
 
         array_unshift($leader_array, $leader_obj);
-        $leader_array = array_values(array_diff($leader_array, array("")));
-
-        $file = fopen("./leader-data.txt", "w");
-        foreach($leader_array as $obj) {
-            fwrite($file, serialize($obj) . "\n");
-        }
-        fclose($file);
+        $leader_array = array_values($leader_array);
+        Leader::save_leaders($leader_array, $logged_leader);
     } // if no errors
     else {
         $display_login = false;
         $action = "account";
     } // else
 
-    $display_login = false;
+    $display_login = true;
 } // create leader
 
 // POST FOR CREATE/EDIT PLAYER
@@ -193,7 +187,8 @@ if (isset($_POST["create"]) || isset($_POST["save"])) {
                 $new_player["number"],
                 $new_player["city"],
                 Country::tryFrom($new_player["country"]),
-                isset($_POST["prof"]));
+                isset($_POST["prof"])
+            );
 
             if ($index_to_edit !== "")
                 $logged_leader->delete_player(intval($index_to_edit));
@@ -204,6 +199,8 @@ if (isset($_POST["create"]) || isset($_POST["save"])) {
                 $dest = "./images/" . $logged_leader->get_email_address() . "/" . $_POST["num"] . substr($_FILES['img']['name'], strpos($_FILES['img']['name'], '.'));
                 move_uploaded_file($_FILES['img']['tmp_name'], $dest);
             } // if image was uploaded
+            $logged_leader = reset_session($logged_leader);
+            Leader::save_leaders($leader_array, $logged_leader);
         } // if no errors
         else {
             $display_login = false;
@@ -306,7 +303,7 @@ if ($action === "logout") {
 
 
 <?php elseif ($action === "view") : ?>
-    <p class="logged-in">Logged in as: <?=$_SESSION["leader_name"]?> since <?=$_SESSION["time_logged"]?></p>
+    <p class="logged-in">Logged in as: <?=$logged_leader->get_name()?> since <?=$_SESSION["time_logged"]?></p>
     <h2>Players</h2>
 <a class="create-btn" href="./player-league.php?action=add"><button name="add" id="add" class="btn stardew-btn">New Player</button></a>
 <a class="logout-btn" href="./player-league.php?action=logout"><button name="logout" id="logout" class="btn stardew-btn">Log Out</button></a>

@@ -102,19 +102,32 @@ class Leader {
         return $this->player_array;
     } // delete_player
 
-    function add_to_players(Player $player) : bool {
-        array_push($this->player_array, $player);
-        $this->player_array = array_values(array_diff($this->player_array, array(null, "")));
-        usort($this->player_array,'by_name');
-        return true;
-    } // add_to_players()
-
     function by_name($a, $b) : int {
         $last_name_comp = strcmp(strtolower($a->get_last_name()), strtolower($b->get_last_name()));
         if ($last_name_comp === 0)
             return strcmp(strtolower($a->get_first_name()), strtolower($b->get_first_name()));
         return $last_name_comp;
     } // by_name
+
+    function add_to_players(Player $player) : void {
+        array_push($this->player_array, $player);
+//        $this->player_array = array_values($this->player_array);
+        usort($this->player_array, array($this,'by_name'));
+    } // add_to_players()
+
+    static function save_leaders(array $leaders, Leader $logged) : void {
+        foreach ($leaders as $i => $lead) {
+            if ($lead->get_email_address() == $logged->get_email_address()) {
+                unset($leaders[$i]);
+                array_push($leaders, $logged);
+            }
+        }
+        $file = fopen("./leader-data.txt", "w");
+        foreach($leaders as $obj) {
+            fwrite($file, serialize($obj) . "\n");
+        }
+        fclose($file);
+    } // save_leaders
 
     // setters & getters
     function get_name() : string {

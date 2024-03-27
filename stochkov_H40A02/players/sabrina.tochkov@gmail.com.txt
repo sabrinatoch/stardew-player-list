@@ -1,4 +1,0 @@
-4~Alexandre~Litchkov~Burgas~Ecuador~no
-3~Konstantin~Tochkov~Sofia~Columbia~yes
-2~Elissaveta~Tochkova~Sofia~Columbia~no
-1~Monika~Tochkova~New York~USA~yes
