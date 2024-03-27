@@ -4,11 +4,13 @@ class Leader {
     private string $name;
     private string $email_address;
     private string $password;
+    private array $player_array;
 
     function __construct(string $name, string $email_address, string $password) {
         $this->name = $name;
         $this->email_address = $email_address;
         $this->password = $password;
+        $this->player_array = [];
     } // __construct()
 
     static function email_error(string $email, array $leaders) : string {
@@ -83,6 +85,11 @@ class Leader {
         return $this->name . "~" . $this->email_address . "~" . $this->password;
     } // create_new_leader()
 
+    function add_to_players(Player $player) : bool {
+        array_push($this->player_array, $player);
+        return true;
+    } // add_to_players()
+
     // setters & getters
     function get_name() : string {
         return $this->name;
@@ -101,5 +108,11 @@ class Leader {
     }
     function set_password(string $password) : void {
         $this->password = $password;
+    }
+    function get_player_array() : array {
+        return $this->player_array;
+    }
+    function set_player_array(array $player_array) : void {
+        $this->player_array = $player_array;
     }
 } // Leader class
