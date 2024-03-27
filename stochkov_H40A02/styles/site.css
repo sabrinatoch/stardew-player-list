@@ -1,0 +1,306 @@
+@import url('https://fonts.cdnfonts.com/css/press-start-2p');
+@font-face {
+    font-family: "Stardew Valley All Caps";
+    src: url("https://db.onlinewebfonts.com/t/1b1432fe0f6a48c9122c20f307e6737d.eot");
+    src: url("https://db.onlinewebfonts.com/t/1b1432fe0f6a48c9122c20f307e6737d.eot?#iefix")format("embedded-opentype"),
+    url("https://db.onlinewebfonts.com/t/1b1432fe0f6a48c9122c20f307e6737d.woff2")format("woff2"),
+    url("https://db.onlinewebfonts.com/t/1b1432fe0f6a48c9122c20f307e6737d.woff")format("woff"),
+    url("https://db.onlinewebfonts.com/t/1b1432fe0f6a48c9122c20f307e6737d.ttf")format("truetype"),
+    url("https://db.onlinewebfonts.com/t/1b1432fe0f6a48c9122c20f307e6737d.svg#Stardew Valley All Caps")format("svg");
+}
+@font-face {
+    font-family: 'StarFont';
+    src:
+            url('../media/Stardew_Valley.ttf')
+            format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-size: 30px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body, html {
+    height: 100%;
+}
+
+body {
+    background-image: url('../media/stardew_night_phone.jpg');
+    background-repeat:no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+    background-color: black;
+    color: #fcf7f7;
+    font-family: 'Open Sans', sans-serif;
+}
+
+h2 {
+    padding-top: 20px;
+    color: goldenrod;
+    font-family: 'Stardew Valley All Caps';
+    font-weight: bold;
+    text-align: center;
+    font-size: 3em;
+}
+
+.center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 10px;
+    width: 80%;
+}
+
+.right {
+    text-align: right;
+}
+form label {
+    font-size: 16px;
+}
+
+form p {
+    font-size: 14px;
+    text-align: center;
+}
+
+input[type="submit"] {
+    font-size: 0.8em;
+    padding: 10px;
+    font-family: "Press Start 2P";
+    color: #251a2a;
+}
+
+a {
+    color: aqua;
+}
+
+.error {
+    display: block;
+}
+
+label {
+    font-size: 30px;
+}
+
+.error p{
+    text-align: left;
+    color: white;
+    border-radius: 5px;
+    padding: 2px;
+    background-color: #950622;
+}
+
+.players {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.err-input {
+    border: 1px solid red;
+    background-color: #FFD9D9;
+    color: red;
+}
+
+.side {
+    display: grid;
+    grid-template-columns: 300px auto;
+}
+
+.added {
+    margin-right: auto;
+    margin-left: auto;
+    width: 80%;
+}
+
+.side {
+    display: block;
+}
+
+.players-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 90%;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.player {
+    position: relative;
+    display: inline-block;
+    border-radius: 5px;
+    border: 2px solid darkgoldenrod;
+    margin: 10px;
+    padding: 10px;
+    backdrop-filter: blur(5px);
+    background-color: rgb(222, 191, 113);
+    box-shadow: darkgoldenrod 4px 6px 5px;
+}
+
+.player:hover {
+    background-color: #f3dba0;
+    box-shadow: saddlebrown 4px 6px 5px;
+    border: 2px solid saddlebrown;
+    /*cursor: pointer;*/
+}
+
+#add, #logout {
+    font-family: 'Press Start 2P';
+    font-size: 0.7em;
+}
+
+.player p:first-of-type {
+    color: #282828;
+    font-family: "Press Start 2P";
+    font-size: 0.8em;
+    text-align: center;
+}
+
+.player img {
+    text-align: center;
+    margin: auto;
+    display: block;
+}
+
+.player p:not(p:first-of-type) {
+    margin-bottom: 2px;
+    color: saddlebrown;
+    text-align: center;
+    font-family: "Press Start 2P";
+    font-size: 0.7em;
+}
+
+.del {
+    color: white;
+    position: absolute;
+    top: 0;
+    right: 9px;
+    cursor: pointer;
+    color: red;
+    font-size: 25px;
+    border-radius: 3px;
+}
+
+.del:before {
+    content: 'x';
+}
+
+.del:hover {
+    color: #ffffff;
+    text-decoration: none;
+}
+
+#logout {
+    background-color: #5b5a57;
+    color: white;
+}
+
+#logout:hover {
+    background-color: #848484;
+}
+
+.create-btn {
+    position: absolute;
+    top: 30px;
+    left: 10px;
+    z-index: 100;
+}
+
+.logout-btn {
+    position: absolute;
+    top: 30px;
+    right: 10px;
+    z-index: 100;
+}
+
+
+.edit {
+    position: absolute;
+    top: 5px;
+    right: 35px;
+    cursor: pointer;
+    background-color: darkorange;
+    box-shadow: #925205 2px 2px;
+    border: 1px solid black;
+    color: black;
+    padding-right: 3px;
+    padding-left: 3px;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+.edit:hover {
+    text-decoration: none;
+    color: #a9a3a3;
+}
+
+.edit:before {
+    content: '🖊'
+}
+
+.stardew-form {
+    background-color: rgb(222, 191, 113);
+    padding: 10px;
+    border-radius: 2px;
+    color: #a44806;
+    font-weight: bold;
+    border: solid 12px #b76500;
+    border-style: double;
+    box-shadow: #4f3b00 3px 3px;
+}
+
+.stardew-btn {
+    background-color: darkorange;
+    box-shadow: #925205 2px 2px;
+    border: 1px solid black;
+}
+
+input[type="submit"]:hover, #add:hover {
+    background-color: #de6005;
+}
+
+.logged-in {
+    /*position: absolute;*/
+    /*bottom: 0;*/
+    /*right: 10px;*/
+    font-size: 15px;
+    text-align: right;
+    margin-right: 10px;
+}
+
+
+@media all and (min-width: 768px) {
+    .container {
+        width: 600px;
+    }
+
+    body {
+        background-image: url("../media/stardew_night_background.png");
+        background-repeat:no-repeat;
+        background-size: cover;
+    }
+
+    h2 {
+        font-size: 3.8em;
+    }
+
+    .players-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .side {
+        display: grid;
+        grid-template-columns: 300px auto;
+    }
+
+}
+
+@media all and (min-width: 1100px) {
+    .players-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+    }
+}
