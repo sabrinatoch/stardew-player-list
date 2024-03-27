@@ -21,15 +21,16 @@ $empty = false;
 $player_filename = "";
 $players_file = [];
 $player_info = [];
-$leaders_file = [];
+$leader_array = [];
 
-if (!file_exists("./players"))
-    mkdir("./players");
+// if (!file_exists("./players"))
+//     mkdir("./players");
 if (!file_exists("./images"))
     mkdir("./images");
 
 // populating the players_file array
 if (isset($_SESSION["leader_email"])) {
+
     $player_filename = "./players/" . $_SESSION["leader_email"] . ".txt";
     if (file_exists($player_filename) && filesize($player_filename) > 0)
         $players_file = file($player_filename, FILE_IGNORE_NEW_LINES);
@@ -173,12 +174,13 @@ if (isset($_POST["submit_account"])) {
                 password_hash($new_leader["pass"], PASSWORD_BCRYPT)
         );
 
-        $leader_str = $leader_obj->create_new_leader();
-        array_unshift($leaders_file, $leader_str);
-        $leaders_file = array_values(array_diff($leaders_file, array("")));
+        array_unshift($leader_array, $leader_obj);
+        $leader_array = array_values(array_diff($leader_array, array("")));
 
         $file = fopen("./leader-data.txt", "w");
-        fwrite($file, implode("\n", $leaders_file));
+        foreach($leader_array as $obj) {
+            fwrite($file, serialize($obj) . "\n");
+        }
         fclose($file);
     } // if no errors
     else {

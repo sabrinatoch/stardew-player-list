@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require "./class-player.php";
 class Leader {
     private string $name;
     private string $email_address;
