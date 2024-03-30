@@ -10,6 +10,14 @@ session_start();
 require "./enums/enum-country.php";
 require "./classes/class-leader.php";
 
+function generateCSRFToken() {
+    return bin2hex(random_bytes(32));
+} // generateCSRFToken()
+
+function isCSRFTokenValid($token) : bool {
+    return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+} // isCSRFTokenValid
+
 // variables
 $action = $_GET["action"] ?? "";
 $display_login = $action === "";
@@ -50,6 +58,11 @@ if (file_exists("./leader-data.txt") && filesize("./leader-data.txt") > 0) {
 else
     $open_file = fopen("./leader-data.txt", "w");
 
+
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = generateCSRFToken();
+} // if CSRF token not set
+
 // LOGIN STUFF
 $login_info = [
         "email" => $_POST["email"] ?? "",
@@ -59,9 +72,14 @@ $login_err = "";
 
 // POST FOR LOGIN
 if (isset($_POST["login"])) {
+
+    if (!isCSRFTokenValid($_POST['csrf_token']))
+        exit('Invalid CSRF token.'); // validate token
+
     $login_err = Leader::login_error($login_info["email"], $login_info["password"], $leader_array);
     if ($login_err === "") {
         $display_login = false;
+        session_regenerate_id();
         $logged_leader = Leader::get_leader_object($login_info["email"]);
         $_SESSION["leader"] = serialize($logged_leader);
         $_SESSION["time_logged"] = date("D M d, Y G:i");
@@ -141,6 +159,8 @@ if ($index_to_edit !== "") {
 
 // POST FOR CREATE LEADER ACCOUNT
 if (isset($_POST["submit_account"])) {
+    if (!isCSRFTokenValid($_POST['csrf_token']))
+        exit('Invalid CSRF token.'); // validate token
     $account_err["name"] = Player::name_error($new_leader["name"]);
     $account_err["email"] = Leader::email_error($new_leader["email"], $leader_array);
     $account_err["pass"] = Leader::password_error($new_leader["pass"]);
@@ -168,6 +188,9 @@ if (isset($_POST["submit_account"])) {
 
 // POST FOR CREATE/EDIT PLAYER
 if (isset($_POST["create"]) || isset($_POST["save"])) {
+
+        if (!isCSRFTokenValid($_POST['csrf_token']))
+            exit('Invalid CSRF token.'); // validate token
 
         $index_to_edit = $_POST["editIndex"] ?? "";
 
@@ -249,6 +272,7 @@ if ($action === "logout") {
                 <p><?=$login_err?></p>
             <?php endif; ?>
         </div>
+        <input type="hidden" name="csrf_token" value="<?=htmlspecialchars($_SESSION['csrf_token'])?>" />
         <div class="right">
             <input type="submit" name="login" id="login" value="Login" class="btn stardew-btn">
         </div>
@@ -295,6 +319,7 @@ if ($action === "logout") {
                     <?php endif; ?>
                 </div>
             </div>
+            <input type="hidden" name="csrf_token" value="<?=htmlspecialchars($_SESSION['csrf_token'])?>" />
             <div class="right">
                 <input type="submit" name="submit_account" id="submit_account" value="Create" class="btn stardew-btn">
             </div>
@@ -399,7 +424,8 @@ if ($action === "logout") {
                     <?php endif; ?>
                 </div>
             </div>
-            <div class="right">
+                <input type="hidden" name="csrf_token" value="<?=htmlspecialchars($_SESSION['csrf_token'])?>" />
+                <div class="right">
                 <?php if ($editing) :?>
                     <input type="hidden" name="editIndex" value="<?=$index_to_edit?>">
                     <input type="submit" name="save" id="save" value="Save" class="btn stardew-btn">
