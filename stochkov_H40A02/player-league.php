@@ -3,7 +3,11 @@ declare(strict_types=1);
 ini_set('display_errors', "1");
 error_reporting(E_ALL);
 ini_set('display_startup_errors', "1");
-header("Content-Security-Policy content=default-src 'self' *.bootstrapcdn.com");
+header("Content-Security-Policy: default-src 'self'; font-src 'self' https://fonts.cdnfonts.com https://db.onlinewebfonts.com data:; style-src 'self' https://fonts.cdnfonts.com https://cdn.jsdelivr.net 'unsafe-inline'; script-src 'self' https://stackpath.bootstrapcdn.com 'unsafe-inline'; frame-ancestors 'none'; form-action 'self'");
+session_set_cookie_params([
+    'httponly' => true,
+    'samesite' => 'Strict'
+]);
 session_start();
 
 // files
@@ -177,13 +181,12 @@ if (isset($_POST["submit_account"])) {
         array_unshift($leader_array, $leader_obj);
         $leader_array = array_values($leader_array);
         Leader::save_leaders($leader_array, $logged_leader);
+        $display_login = true;
     } // if no errors
     else {
         $display_login = false;
         $action = "account";
     } // else
-
-    $display_login = true;
 } // create leader
 
 // POST FOR CREATE/EDIT PLAYER
